@@ -1,0 +1,11 @@
+version: '2'
+services:
+  web:
+    image: rabbitmq
+    ports:
+      - 5672:5672
+    networks:
+      - default
+networks:
+  default:
+    driver: bridge

@@ -1,0 +1,28 @@
+{
+  "name": "rekrow",
+  "version": "0.0.0",
+  "description": "Robust distributed worker queue using RabbitMQ to end all the headache",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d6u/rekrow.git"
+  },
+  "keywords": [],
+  "author": "Daiwei Lu <daiweilu123@gmail.com> (http://daiwei.lu/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/d6u/rekrow/issues"
+  },
+  "homepage": "https://github.com/d6u/rekrow#readme",
+  "devDependencies": {
+    "@types/amqplib": "0.3.29",
+    "tape": "4.6.2",
+    "typescript": "2.0.3"
+  },
+  "dependencies": {
+    "amqplib": "0.4.2"
+  }
+}
