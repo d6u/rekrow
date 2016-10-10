@@ -2,10 +2,6 @@
   "name": "rekrow",
   "version": "0.0.0",
   "description": "Robust distributed worker queue using RabbitMQ to end all the headache",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/d6u/rekrow.git"
@@ -17,13 +13,17 @@
     "url": "https://github.com/d6u/rekrow/issues"
   },
   "homepage": "https://github.com/d6u/rekrow#readme",
+  "dependencies": {
+    "amqplib": "0.4.2"
+  },
+  "main": "index.js",
   "devDependencies": {
     "@types/amqplib": "0.3.29",
     "expect": "1.20.2",
     "mocha": "3.1.0",
     "typescript": "2.0.3"
   },
-  "dependencies": {
-    "amqplib": "0.4.2"
+  "scripts": {
+    "test": "mocha --recursive test"
   }
 }

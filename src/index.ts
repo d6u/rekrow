@@ -6,12 +6,30 @@ export default class Rekrow {
   private pendingConnect: Promise<void> | null = null;
   private pendingOperations = new Set<Promise<void>>();
   private isClosing = false;
+
+  private readonly url: string;
+  private readonly jobName: string;
+  private readonly handle: ((data: Object) => Promise<void>) | null;
+  private readonly maxParallelJobCount: number | null;
+  private readonly maxRetryCount: number;
+  private readonly retryWaitTime: number;
   private readonly exchangeName: string;
   private readonly queueName: string;
+  private readonly retryExchangeName: string;
+  private readonly retryQueueName: string;
 
-  constructor(private readonly opts: RekrowOptions) {
+  constructor(opts: RekrowOptions) {
+    this.url = opts.url;
+    this.jobName = opts.jobName;
+    this.handle = opts.handle || null;
+    this.maxParallelJobCount = opts.maxParallelJobCount || null;
+    this.maxRetryCount = opts.maxRetryCount || 0;
+    this.retryWaitTime = opts.retryWaitTime || 5000;
+
     this.exchangeName = `${opts.jobName}_exchange`;
     this.queueName = `${opts.jobName}_queue`;
+    this.retryExchangeName = `${opts.jobName}_retry_exchange`;
+    this.retryQueueName = `${opts.jobName}_retry_queue`;
   }
 
   connect() {
@@ -21,7 +39,7 @@ export default class Rekrow {
     if (this.externalResources) {
       return Promise.resolve();
     }
-    this.pendingConnect = this.createConnection();
+    this.pendingConnect = this.setup();
     return this.pendingConnect;
   }
 
@@ -46,32 +64,42 @@ export default class Rekrow {
     if (!this.externalResources) {
       throw new Error('"connect" must be called first before enqueue any job');
     }
-
-    return this.externalResources.ch.publish(
-      this.exchangeName,
-      '',
-      new Buffer(JSON.stringify(data)),
-      {persistent: true});
+    return this.publish(new Buffer(JSON.stringify(data)));
   }
 
-  private async createConnection() {
-    const conn = await amqp.connect(this.opts.url, {
-      heartbeat: 1
-    });
+  private async setup() {
+    // Setup connection and channel
+    //
+
+    const conn = await amqp.connect(this.url, {heartbeat: 1});
     const ch = await conn.createChannel();
-    await ch.assertExchange(this.exchangeName, 'topic', {
-      durable: true
-    });
-    await ch.assertQueue(this.queueName, {
-      durable: true
-    });
+
+    // Create worker queue
+    //
+
+    await ch.assertExchange(this.exchangeName, 'topic', {durable: true});
+    await ch.assertQueue(this.queueName, {durable: true});
     await ch.bindQueue(this.queueName, this.exchangeName, '');
+
+    // Create retry waiting queue
+    //
+
+    await ch.assertExchange(this.retryExchangeName, 'topic', {durable: true});
+    await ch.assertQueue(this.retryQueueName, {
+      durable: true,
+      messageTtl: this.retryWaitTime,
+      deadLetterExchange: this.exchangeName
+    });
+    await ch.bindQueue(this.retryQueueName, this.retryExchangeName, '');
+
+    // Setup consumer
+    //
 
     let consumerTag: string | null = null;
 
-    if (this.opts.handle) {
-      if (this.opts.maxParallelJobCount) {
-        await ch.prefetch(this.opts.maxParallelJobCount);
+    if (this.handle) {
+      if (this.maxParallelJobCount) {
+        await ch.prefetch(this.maxParallelJobCount);
       }
 
       const consumer = await ch.consume(this.queueName, msg => {
@@ -89,6 +117,9 @@ export default class Rekrow {
       consumerTag = consumer.consumerTag;
     }
 
+    // Save references to external resources
+    //
+
     this.externalResources = consumerTag ? {conn, ch, consumerTag} : {conn, ch};
   }
 
@@ -96,19 +127,41 @@ export default class Rekrow {
     const data = JSON.parse(msg.content.toString());
     try {
       // Wrap with "resolve" in case handle doesn't return promise
-      await Promise.resolve(this.opts.handle!(data));
+      await Promise.resolve(this.handle!(data));
       await this.externalResources!.ch.ack(msg);
     } catch (err) {
-      await this.externalResources!.ch.nack(msg, false, true);
+      if (this.maxRetryCount) {
+        const currentCount = parseInt(msg.properties.headers['x-retry-count']);
+        if (currentCount <= this.maxRetryCount) {
+          this.publish(msg.content, true, currentCount + 1);
+        }
+      }
+      await this.externalResources!.ch.nack(msg, false, false);
     }
+  }
+
+  private publish(content: Buffer, isRetry: boolean = false, currentRetryCount: number = 0) {
+    return this.externalResources!.ch.publish(
+      isRetry ? this.retryExchangeName : this.exchangeName,
+      '',
+      content,
+      {
+        persistent: true,
+        headers: {
+          'x-retry-count': currentRetryCount
+        }
+      }
+    );
   }
 }
 
 export interface RekrowOptions {
   url: string;
   jobName: string;
-  handle?: (data: Object) => Promise<void>;
   maxParallelJobCount?: number;
+  maxRetryCount?: number;
+  retryWaitTime?: number;
+  handle?: (data: Object) => Promise<void>;
 }
 
 interface RekrowExternalResources {

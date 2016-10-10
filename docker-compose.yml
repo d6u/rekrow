@@ -1,9 +1,10 @@
 version: '2'
 services:
   web:
-    image: rabbitmq
+    image: rabbitmq:3.6.5-management
     ports:
-      - 5672:5672
+      - 5672:5672 # rabbit port
+      - 15672:15672 # management UI
     networks:
       - default
 networks:

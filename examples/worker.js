@@ -7,10 +7,12 @@ const rekrow = new Rekrow({
   url: 'amqp://localhost',
   jobName: 'example',
   maxParallelJobCount: 1,
+  // maxRetryCount: 1,
   handle(data) {
     console.log(id, data);
-    return new Promise(r => {
-      setTimeout(r, id * 1000);
+    return new Promise((r, j) => {
+      setTimeout(() => j(new Error()), 1000);
+      // setTimeout(r, 1000);
     });
   }
 });
