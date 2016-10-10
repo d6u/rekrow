@@ -8,28 +8,23 @@ test('receive enqueued job', (t) => {
 
   const r1 = new Rekrow({
     url: 'amqp://localhost',
-    jobName: 'test1',
+    jobName: 'test',
     handle(data) {
       t.deepEqual(data, {name: 'test'});
+      r1.close();
+      r2.close();
     }
   });
 
   const r2 = new Rekrow({
     url: 'amqp://localhost',
-    jobName: 'test1'
+    jobName: 'test'
   });
 
-  r1.connect();
-
-  r2.connect()
+  Promise.all([r1.connect(), r2.connect()])
     .then(() => {
       r2.enqueue({name: 'test'});
     });
-
-  setTimeout(() => {
-    r1.close();
-    r2.close();
-  }, 100);
 });
 
 test('redelive failed job', (t) => {
@@ -39,30 +34,25 @@ test('redelive failed job', (t) => {
 
   const r1 = new Rekrow({
     url: 'amqp://localhost',
-    jobName: 'test2',
+    jobName: 'test',
     handle(data) {
       t.deepEqual(data, {name: 'test'});
       count++;
       if (count === 1) {
         throw new Error('some error');
       }
+      r1.close();
+      r2.close();
     }
   });
 
   const r2 = new Rekrow({
     url: 'amqp://localhost',
-    jobName: 'test2'
+    jobName: 'test'
   });
 
-  r1.connect();
-
-  r2.connect()
+  Promise.all([r1.connect(), r2.connect()])
     .then(() => {
       r2.enqueue({name: 'test'});
     });
-
-  setTimeout(() => {
-    r1.close();
-    r2.close();
-  }, 100);
 });
