@@ -2,6 +2,13 @@
 
 Robust distributed worker queue using RabbitMQ to end all the headache
 
+## TODO
+
+- [x] Support retry limit
+- [x] Support retry backoff
+- [ ] Support [retry exponential (or custom) backoff](https://m.alphasights.com/exponential-backoff-with-rabbitmq-78386b9bec81#.v1bz77n0e)
+- [ ] Support job routing (using RabbitMQ exchange routing)
+
 ## Install
 
 ```
