@@ -70,8 +70,8 @@ export default class Rekrow {
     let consumerTag: string | null = null;
 
     if (this.opts.handle) {
-      if (this.opts.parallelJobCount) {
-        await ch.prefetch(this.opts.parallelJobCount);
+      if (this.opts.maxParallelJobCount) {
+        await ch.prefetch(this.opts.maxParallelJobCount);
       }
 
       const consumer = await ch.consume(this.queueName, msg => {
@@ -108,7 +108,7 @@ export interface RekrowOptions {
   url: string;
   jobName: string;
   handle?: (data: Object) => Promise<void>;
-  parallelJobCount?: number;
+  maxParallelJobCount?: number;
 }
 
 interface RekrowExternalResources {
