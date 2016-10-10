@@ -1,6 +1,6 @@
 {
   "name": "rekrow",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Robust distributed worker queue using RabbitMQ to end all the headache",
   "repository": {
     "type": "git",
