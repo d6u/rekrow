@@ -6,17 +6,25 @@
     "type": "git",
     "url": "git+https://github.com/d6u/rekrow.git"
   },
-  "keywords": [],
+  "keywords": [
+    "rabbitmq",
+    "distributed worker",
+    "background worker"
+  ],
   "author": "Daiwei Lu <daiweilu123@gmail.com> (http://daiwei.lu/)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/d6u/rekrow/issues"
   },
   "homepage": "https://github.com/d6u/rekrow#readme",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
   "dependencies": {
     "amqplib": "0.4.2"
   },
-  "main": "index.js",
   "devDependencies": {
     "@types/amqplib": "0.3.29",
     "expect": "1.20.2",
@@ -24,6 +32,11 @@
     "typescript": "2.0.3"
   },
   "scripts": {
-    "test": "mocha --recursive test"
+    "clean": "rm -rv lib",
+    "build": "tsc",
+    "watch:build": "npm run build -- -w",
+    "test": "mocha --recursive test",
+    "preversion": "npm run clean -s; npm run build",
+    "postversion": "git push && git push --tags"
   }
 }
