@@ -8,6 +8,7 @@ export default class Rekrow {
   private isClosing = false;
 
   private readonly url: string;
+  private readonly socketOptions?: Object;
   private readonly jobName: string;
   private readonly handle: ((data: Object) => Promise<void>) | null;
   private readonly maxParallelJobCount: number | null;
@@ -19,7 +20,8 @@ export default class Rekrow {
   private readonly retryQueueName: string;
 
   constructor(opts: RekrowOptions) {
-    this.url = opts.url;
+    this.url = opts.connection.url;
+    this.socketOptions = opts.connection.socketOptions;
     this.jobName = opts.jobName;
     this.handle = opts.handle || null;
     this.maxParallelJobCount = opts.maxParallelJobCount || null;
@@ -71,7 +73,10 @@ export default class Rekrow {
     // Setup connection and channel
     //
 
-    const conn = await amqp.connect(this.url, {heartbeat: 1});
+    const conn = await amqp.connect(
+      this.url,
+      Object.assign({heartbeat: 1}, this.socketOptions)
+    );
     const ch = await conn.createChannel();
 
     // Create worker queue
@@ -156,7 +161,10 @@ export default class Rekrow {
 }
 
 export interface RekrowOptions {
-  url: string;
+  connection: {
+    url: string;
+    socketOptions?: Object;
+  };
   jobName: string;
   maxParallelJobCount?: number;
   maxRetryCount?: number;
