@@ -5,7 +5,9 @@ const expect = require('expect');
 
 it('receive enqueued job', (done) => {
   const r1 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test',
     handle(data) {
       expect(data).toEqual({name: 'test'});
@@ -13,7 +15,9 @@ it('receive enqueued job', (done) => {
   });
 
   const r2 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test'
   });
 
@@ -33,7 +37,9 @@ it('redelive failed job', (done) => {
   let count = 0;
 
   const r1 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test',
     handle(data) {
       expect(data).toEqual({name: 'test'});
@@ -45,7 +51,9 @@ it('redelive failed job', (done) => {
   });
 
   const r2 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test'
   });
 
@@ -63,12 +71,16 @@ it('redelive failed job', (done) => {
 
 it('honor maxParallelJobCount', (done) => {
   const r1 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test'
   });
 
   const r2 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test',
     maxParallelJobCount: 1,
     handle(data) {
@@ -82,7 +94,9 @@ it('honor maxParallelJobCount', (done) => {
   });
 
   const r3 = new Rekrow({
-    url: 'amqp://localhost',
+    connection: {
+      url: 'amqp://localhost',
+    },
     jobName: 'test',
     maxParallelJobCount: 1,
     handle(data) {
