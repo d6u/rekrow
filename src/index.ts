@@ -73,7 +73,10 @@ export default class Rekrow {
     // Setup connection and channel
     //
 
-    const conn = await amqp.connect(this.url, this.socketOptions);
+    const conn = await amqp.connect(
+      this.url,
+      Object.assign({heartbeat: 1}, this.socketOptions)
+    );
     const ch = await conn.createChannel();
 
     // Create worker queue
